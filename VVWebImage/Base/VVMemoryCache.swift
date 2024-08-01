@@ -5,16 +5,22 @@
 
 import UIKit
 
-private class VVMemoryCacheLinkedMapNode {
+/// VVMemoryCacheNode is a node in the linked list used by VVMemoryCache
+private class VVMemoryCacheNode {
     // Weak var will slow down speed. So use strong var. Set all notes prev/next to nil when removing all nodes
-    fileprivate var prev: VVMemoryCacheLinkedMapNode?
-    fileprivate var next: VVMemoryCacheLinkedMapNode?
+    fileprivate var prev: VVMemoryCacheNode?
+    fileprivate var next: VVMemoryCacheNode?
     
+    /// The key of the node
     fileprivate var key: String
+    /// The value of the node
     fileprivate var value: Any
+    /// The cost of the node
     fileprivate var cost: Int
+    /// The last access time of the node
     fileprivate var lastAccessTime: TimeInterval
     
+    /// Initializes a new node with a key and value
     fileprivate init(key: String, value: Any) {
         self.key = key
         self.value = value
@@ -23,22 +29,33 @@ private class VVMemoryCacheLinkedMapNode {
     }
 }
 
+/// VVMemoryCacheLinkedMap is a linked map used by VVMemoryCache to store nodes
 private class VVMemoryCacheLinkedMap {
-    fileprivate var dic: [String : VVMemoryCacheLinkedMapNode]
-    fileprivate var head: VVMemoryCacheLinkedMapNode?
-    fileprivate var tail: VVMemoryCacheLinkedMapNode?
+    /// The map of keys to nodes
+    fileprivate var map: [String : VVMemoryCacheNode]
+    /// The head of the linked list
+    fileprivate var head: VVMemoryCacheNode?
+    /// The tail of the linked list
+    fileprivate var tail: VVMemoryCacheNode?
+    /// The total cost of all nodes
     fileprivate var totalCost: Int
+    /// The total count of all nodes
     fileprivate var totalCount: Int
     
+    /// Deinitializes the linked map and breaks the retain cycle
     deinit { breakRetainCycle() }
     
+    /// Initializes a new linked map
     init() {
-        dic = [:]
+        map = [:]
         totalCost = 0
         totalCount = 0
     }
     
-    fileprivate func bringNodeToHead(_ node: VVMemoryCacheLinkedMapNode) {
+    /// Brings a node to the head of the linked list
+    ///
+    /// - Parameter node: The node to bring to the head
+    fileprivate func bringNodeToHead(_ node: VVMemoryCacheNode) {
         if head === node { return }
         if tail === node {
             tail = node.prev
@@ -53,8 +70,11 @@ private class VVMemoryCacheLinkedMap {
         head = node
     }
     
-    fileprivate func insertNodeAtHead(_ node: VVMemoryCacheLinkedMapNode) {
-        dic[node.key] = node
+    /// Inserts a node at the head of the linked list
+    ///
+    /// - Parameter node: The node to insert
+    fileprivate func insertNodeAtHead(_ node: VVMemoryCacheNode) {
+        map[node.key] = node
         if head == nil {
             head = node
             tail = node
@@ -67,8 +87,11 @@ private class VVMemoryCacheLinkedMap {
         totalCount += 1
     }
     
-    fileprivate func remove(_ node: VVMemoryCacheLinkedMapNode) {
-        dic[node.key] = nil
+    /// Removes a node from the linked list
+    ///
+    /// - Parameter node: The node to remove
+    fileprivate func remove(_ node: VVMemoryCacheNode) {
+        map[node.key] = nil
         node.prev?.next = node.next
         node.next?.prev = node.prev
         if head === node { head = node.next }
@@ -77,8 +100,9 @@ private class VVMemoryCacheLinkedMap {
         totalCount -= 1
     }
     
+    /// Removes all nodes from the linked list
     fileprivate func removeAll() {
-        dic.removeAll()
+        map.removeAll()
         breakRetainCycle()
         head = nil
         tail = nil
@@ -86,6 +110,7 @@ private class VVMemoryCacheLinkedMap {
         totalCount = 0
     }
     
+    /// Breaks the retain cycle of the linked list
     private func breakRetainCycle() {
         var node = head
         while let next = node?.next {
@@ -97,13 +122,20 @@ private class VVMemoryCacheLinkedMap {
 
 /// VVMemoryCache is a thread safe memory cache using least recently used algorithm
 public class VVMemoryCache {
+    /// The linked map used by the cache
     private let linkedMap: VVMemoryCacheLinkedMap
+    /// The cost limit of the cache
     private var costLimit: Int
+    /// The count limit of the cache
     private var countLimit: Int
+    /// The age limit of the cache
     private var ageLimit: TimeInterval
+    /// The lock used to ensure thread safety
     private var lock: pthread_mutex_t
+    /// The queue used to perform background tasks
     private var queue: DispatchQueue
     
+    /// Initializes a new memory cache
     init() {
         linkedMap = VVMemoryCacheLinkedMap()
         costLimit = .max
@@ -119,19 +151,20 @@ public class VVMemoryCache {
         trimRecursively()
     }
     
+    /// Deinitializes the memory cache and removes all observers
     deinit {
         NotificationCenter.default.removeObserver(self)
         pthread_mutex_destroy(&lock)
     }
     
-    /// Gets image with key
+    /// Gets an image from the cache with a given key
     ///
-    /// - Parameter key: cache key
-    /// - Returns: image in memory cache, or nil if no image found
+    /// - Parameter key: The key of the image
+    /// - Returns: The image if found, otherwise nil
     public func image(forKey key: String) -> UIImage? {
         pthread_mutex_lock(&lock)
         var value: UIImage?
-        if let node = linkedMap.dic[key] {
+        if let node = linkedMap.map[key] {
             value = node.value as? UIImage
             node.lastAccessTime = CACurrentMediaTime()
             linkedMap.bringNodeToHead(node)
@@ -140,23 +173,23 @@ public class VVMemoryCache {
         return value
     }
     
-    /// Stores image with key and cost
+    /// Stores an image in the cache with a given key and cost
     ///
     /// - Parameters:
-    ///   - image: image to store
-    ///   - key: cache key
-    ///   - cost: cost of memory
+    ///   - image: The image to store
+    ///   - key: The key of the image
+    ///   - cost: The cost of the image
     public func store(_ image: UIImage, forKey key: String, cost: Int = 0) {
         pthread_mutex_lock(&lock)
         let realCost: Int = cost > 0 ? cost : Int(image.size.width * image.size.height * image.scale)
-        if let node = linkedMap.dic[key] {
+        if let node = linkedMap.map[key] {
             linkedMap.totalCost += realCost - node.cost
             node.value = image
             node.cost = realCost
             node.lastAccessTime = CACurrentMediaTime()
             linkedMap.bringNodeToHead(node)
         } else {
-            let node = VVMemoryCacheLinkedMapNode(key: key, value: image)
+            let node = VVMemoryCacheNode(key: key, value: image)
             node.cost = realCost
             linkedMap.insertNodeAtHead(node)
             
@@ -174,24 +207,27 @@ public class VVMemoryCache {
         pthread_mutex_unlock(&lock)
     }
     
-    /// Removes image with key
+    /// Removes an image from the cache with a given key
     ///
-    /// - Parameter key: cache key
+    /// - Parameter key: The key of the image
     public func removeImage(forKey key: String) {
         pthread_mutex_lock(&lock)
-        if let node = linkedMap.dic[key] {
+        if let node = linkedMap.map[key] {
             linkedMap.remove(node)
         }
         pthread_mutex_unlock(&lock)
     }
     
-    /// Removes all images
+    /// Removes all images from the cache
     @objc public func clear() {
         pthread_mutex_lock(&lock)
         linkedMap.removeAll()
         pthread_mutex_unlock(&lock)
     }
     
+    /// Sets the cost limit of the cache
+    ///
+    /// - Parameter cost: The cost limit
     public func setCostLimit(_ cost: Int) {
         pthread_mutex_lock(&lock)
         costLimit = cost
@@ -202,6 +238,9 @@ public class VVMemoryCache {
         pthread_mutex_unlock(&lock)
     }
     
+    /// Sets the count limit of the cache
+    ///
+    /// - Parameter count: The count limit
     public func setCountLimit(_ count: Int) {
         pthread_mutex_lock(&lock)
         countLimit = count
@@ -212,6 +251,9 @@ public class VVMemoryCache {
         pthread_mutex_unlock(&lock)
     }
     
+    /// Sets the age limit of the cache
+    ///
+    /// - Parameter age: The age limit
     public func setAgeLimit(_ age: TimeInterval) {
         pthread_mutex_lock(&lock)
         ageLimit = age
@@ -222,6 +264,9 @@ public class VVMemoryCache {
         pthread_mutex_unlock(&lock)
     }
     
+    /// Trims the cache to a given cost
+    ///
+    /// - Parameter cost: The cost to trim to
     private func trim(toCost cost: Int) {
         pthread_mutex_lock(&lock)
         let unlock: () -> Void = { pthread_mutex_unlock(&self.lock) }
@@ -248,6 +293,9 @@ public class VVMemoryCache {
         }
     }
     
+    /// Trims the cache to a given count
+    ///
+    /// - Parameter count: The count to trim to
     private func trim(toCount count: Int) {
         pthread_mutex_lock(&lock)
         let unlock: () -> Void = { pthread_mutex_unlock(&self.lock) }
@@ -274,6 +322,9 @@ public class VVMemoryCache {
         }
     }
     
+    /// Trims the cache to a given age
+    ///
+    /// - Parameter age: The age to trim to
     private func trim(toAge age: TimeInterval) {
         pthread_mutex_lock(&lock)
         let unlock: () -> Void = { pthread_mutex_unlock(&self.lock) }
@@ -301,6 +352,7 @@ public class VVMemoryCache {
         }
     }
     
+    /// Recursively trims the cache to the age limit
     private func trimRecursively() {
         queue.asyncAfter(deadline: .now() + 5) { [weak self] in
             guard let self = self else { return }

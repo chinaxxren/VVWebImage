@@ -3,16 +3,15 @@
 //  VVWebImage
 //
 
-
-import UIKit
 import MobileCoreServices
+import UIKit
 
 public enum VVImageFormat {
     case unknown
     case JPEG
     case PNG
     case GIF
-    
+
     var UTType: CFString {
         switch self {
         case .JPEG:
@@ -29,9 +28,9 @@ public enum VVImageFormat {
 
 public extension Data {
     var vv_imageFormat: VVImageFormat {
-        if let firstByte = self.first {
+        if let firstByte = first {
             switch firstByte {
-            case 0xFF: return .JPEG // https://en.wikipedia.org/wiki/JPEG
+            case 0xff: return .JPEG // https://en.wikipedia.org/wiki/JPEG
             case 0x89: return .PNG // https://en.wikipedia.org/wiki/Portable_Network_Graphics
             case 0x47: return .GIF // https://en.wikipedia.org/wiki/GIF
             default: return .unknown

@@ -10,15 +10,15 @@ import UIKit
 import MapKit
 
 extension MKAnnotationView: VVWebCache {
-    /// Sets image with resource, placeholder, custom opotions
+    /// 设置图片，使用资源、占位符、自定义选项
     ///
     /// - Parameters:
-    ///   - resource: image resource specifying how to download and cache image
-    ///   - placeholder: placeholder image displayed when loading image
-    ///   - options: options for some behaviors
-    ///   - editor: editor specifying how to edit and cache image in memory
-    ///   - progress: a closure called while image is downloading
-    ///   - completion: a closure called when image loading is finished
+    ///   - resource: 指定如何下载和缓存图片的图片资源
+    ///   - placeholder: 加载图片时显示的占位符图片
+    ///   - options: 一些行为的选项
+    ///   - editor: 指定如何在内存中编辑和缓存图片
+    ///   - progress: 在图片下载过程中调用的闭包
+    ///   - completion: 图片加载完成后调用的闭包
     public func vv_setImage(with resource: VVWebCacheResource,
                             placeholder: UIImage? = nil,
                             options: VVWebImageOptions = .none,
@@ -38,7 +38,7 @@ extension MKAnnotationView: VVWebCache {
                     completion: completion)
     }
     
-    /// Cancels image loading task
+    /// 取消图片加载任务
     public func vv_cancelImageLoadTask() {
         vv_webCacheOperation.task(forKey: vv_imageLoadTaskKey)?.cancel()
     }

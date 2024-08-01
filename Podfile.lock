@@ -1,0 +1,18 @@
+PODS:
+  - VVWebImage (1.1.3):
+    - VVWebImage/Core (= 1.1.3)
+  - VVWebImage/Core (1.1.3)
+
+DEPENDENCIES:
+  - VVWebImage (from `./`)
+
+EXTERNAL SOURCES:
+  VVWebImage:
+    :path: "./"
+
+SPEC CHECKSUMS:
+  VVWebImage: 4e171db2fc49c5ed1f943b591e0ce5a94a683041
+
+PODFILE CHECKSUM: 5e8109a1a9d9859a5e591bfb815ca550032ebef4
+
+COCOAPODS: 1.15.2

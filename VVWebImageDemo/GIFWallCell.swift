@@ -1,0 +1,42 @@
+//
+//  GIFWallCell.swift
+//  VVWebImageDemo
+//
+//  Created by waqu on 2/12/19.
+//  Copyright © 2019 waqu. All rights reserved.
+//
+
+import UIKit
+import VVWebImage
+
+class GIFWallCell: UICollectionViewCell {
+    private var imageView: UIImageView!
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        
+        imageView = VVAnimatedImageView(frame: CGRect(origin: .zero, size: frame.size))
+        imageView.contentMode = .scaleAspectFill
+        imageView.clipsToBounds = true
+        contentView.addSubview(imageView)
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func set(url: URL) {
+        let editor = vv_imageEditorCommon(with: imageView.frame.size,
+                                          corner: .allCorners,
+                                          cornerRadius: 5,
+                                          borderWidth: 1,
+                                          borderColor: .yellow,
+                                          backgroundColor: .gray)
+        imageView.vv_setImage(with: url,
+                              placeholder: UIImage(named: "placeholder"),
+                              options: .none,
+                              editor: editor,
+                              progress: nil,
+                              completion: nil)
+    }
+}

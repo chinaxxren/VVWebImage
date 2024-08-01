@@ -127,6 +127,7 @@ public class VVImageCoderManager {
 }
 
 extension VVImageCoderManager: VVImageCoder {
+    /// Checks if the image coder can decode the given data
     public func canDecode(_ data: Data) -> Bool {
         let currentCoders = coders
         for coder in currentCoders where coder.canDecode(data) {
@@ -135,6 +136,7 @@ extension VVImageCoderManager: VVImageCoder {
         return false
     }
     
+    /// Decodes the given data into an image
     public func decodedImage(with data: Data) -> UIImage? {
         let currentCoders = coders
         for coder in currentCoders where coder.canDecode(data) {
@@ -143,6 +145,7 @@ extension VVImageCoderManager: VVImageCoder {
         return nil
     }
     
+    /// Decompresses the given image with the given data
     public func decompressedImage(with image: UIImage, data: Data) -> UIImage? {
         let currentCoders = coders
         for coder in currentCoders where coder.canDecode(data) {
@@ -151,6 +154,7 @@ extension VVImageCoderManager: VVImageCoder {
         return nil
     }
     
+    /// Checks if the image coder can encode the given image format
     public func canEncode(_ format: VVImageFormat) -> Bool {
         let currentCoders = coders
         for coder in currentCoders where coder.canEncode(format) {
@@ -159,6 +163,7 @@ extension VVImageCoderManager: VVImageCoder {
         return false
     }
     
+    /// Encodes the given image to the specified format
     public func encodedData(with image: UIImage, format: VVImageFormat) -> Data? {
         let currentCoders = coders
         for coder in currentCoders where coder.canEncode(format) {
@@ -167,6 +172,7 @@ extension VVImageCoderManager: VVImageCoder {
         return nil
     }
     
+    /// Copies the image coder
     public func copy() -> VVImageCoder {
         let newObj = VVImageCoderManager()
         var newCoders: [VVImageCoder] = []
@@ -180,6 +186,7 @@ extension VVImageCoderManager: VVImageCoder {
 }
 
 extension VVImageCoderManager: VVImageProgressiveCoder {
+    /// Checks if the image coder can decode the given data incrementally
     public func canIncrementallyDecode(_ data: Data) -> Bool {
         let currentCoders = coders
         for coder in currentCoders {
@@ -191,6 +198,7 @@ extension VVImageCoderManager: VVImageProgressiveCoder {
         return false
     }
     
+    /// Decodes the given data incrementally
     public func incrementallyDecodedImage(with data: Data, finished: Bool) -> UIImage? {
         let currentCoders = coders
         for coder in currentCoders {

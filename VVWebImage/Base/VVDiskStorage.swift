@@ -6,6 +6,7 @@
 import UIKit
 import SQLite3
 
+/// VVDiskStorageItem represents an item in the disk storage
 private struct VVDiskStorageItem {
     let key: String
     var filename: String?
@@ -33,8 +34,11 @@ public class VVDiskStorage {
     ///
     /// - Parameter path: directory storing data
     public init?(path: String) {
+        // 创建一个DispatchSemaphore对象，用于线程同步
         ioLock = DispatchSemaphore(value: 1)
+        // 设置数据存储路径
         baseDataPath = path + "/Data"
+        // 创建数据存储路径
         do {
             try FileManager.default.createDirectory(atPath: path, withIntermediateDirectories: true)
         } catch _ {
@@ -47,12 +51,15 @@ public class VVDiskStorage {
             print("Fail to create VVCache base data path")
             return nil
         }
+        // 创建数据库路径
         let databasePath = path + "/VVCache.sqlite"
+        // 打开数据库
         if sqlite3_open(databasePath, &database) != SQLITE_OK {
             print("Fail to open sqlite at \(databasePath)")
             try? FileManager.default.removeItem(atPath: databasePath)
             return nil
         }
+        // 创建数据库表
         let sql = "PRAGMA journal_mode = WAL; PRAGMA synchronous = NORMAL; CREATE TABLE IF NOT EXISTS Storage_item (key text PRIMARY KEY, filename text, data blob, size integer, last_access_time real); CREATE INDEX IF NOT EXISTS last_access_time_index ON Storage_item(last_access_time);"
         if sqlite3_exec(database, sql.vv_utf8, nil, nil, nil) != SQLITE_OK {
             print("Fail to create VVCache sqlite Storage_item table")
@@ -62,6 +69,7 @@ public class VVDiskStorage {
     }
     
     deinit {
+        // 关闭数据库
         ioLock.wait()
         if let db = database { sqlite3_close(db) }
         ioLock.signal()
@@ -75,6 +83,7 @@ public class VVDiskStorage {
         if key.isEmpty { return nil }
         ioLock.wait()
         var data: Data?
+        // 查询数据库
         let sql = "SELECT filename, data, size FROM Storage_item WHERE key = '\(key)';"
         var stmt: OpaquePointer?
         if sqlite3_prepare_v2(database, sql.vv_utf8, -1, &stmt, nil) == SQLITE_OK {
@@ -84,15 +93,15 @@ public class VVDiskStorage {
                 let size = sqlite3_column_int(stmt, 2)
                 if let currentDataPointer = dataPointer,
                     size > 0 {
-                    // Get data from database
+                    // 从数据库中获取数据
                     data = Data(bytes: currentDataPointer, count: Int(size))
                 } else if let currentFilenamePointer = filenamePointer {
-                    // Get data from data file
+                    // 从文件中获取数据
                     let filename = String(cString: currentFilenamePointer)
                     data = try? Data(contentsOf: URL(fileURLWithPath: "\(baseDataPath)/\(filename)"))
                 }
                 if data != nil {
-                    // Update last access time
+                    // 更新最后访问时间
                     let sql = "UPDATE Storage_item SET last_access_time = \(CACurrentMediaTime()) WHERE key = '\(key)';"
                     if sqlite3_exec(database, sql.vv_utf8, nil, nil, nil) != SQLITE_OK {
                         print("Fail to set last_access_time for key \(key)")
@@ -116,6 +125,7 @@ public class VVDiskStorage {
         if key.isEmpty { return false }
         ioLock.wait()
         var exists = false
+        // 查询数据库
         let sql = "SELECT count(*) FROM Storage_item WHERE key = '\(key)';"
         var stmt: OpaquePointer?
         if sqlite3_prepare_v2(database, sql.vv_utf8, -1, &stmt, nil) == SQLITE_OK {
@@ -139,6 +149,7 @@ public class VVDiskStorage {
     public func store(_ data: Data, forKey key: String, type: VVDiskStorageType) {
         if key.isEmpty { return }
         ioLock.wait()
+        // 插入数据
         let sql = "INSERT OR REPLACE INTO Storage_item (key, filename, data, size, last_access_time) VALUES (?1, ?2, ?3, ?4, ?5);"
         var stmt: OpaquePointer?
         if sqlite3_prepare_v2(database, sql.vv_utf8, -1, &stmt, nil) == SQLITE_OK {
@@ -249,7 +260,7 @@ public class VVDiskStorage {
     }
     
     private func _removeData(forKey key: String) {
-        // Get filename and delete file data
+        // 获取文件名并删除文件数据
         let selectSql = "SELECT filename FROM Storage_item WHERE key = '\(key)';"
         var stmt: OpaquePointer?
         if sqlite3_prepare_v2(database, selectSql.vv_utf8, -1, &stmt, nil) == SQLITE_OK {
@@ -261,7 +272,7 @@ public class VVDiskStorage {
             }
             sqlite3_finalize(stmt)
         }
-        // Delete from database
+        // 从数据库中删除数据
         let sql = "DELETE FROM Storage_item WHERE key = '\(key)';"
         if sqlite3_exec(database, sql.vv_utf8, nil, nil, nil) != SQLITE_OK {
             print("Fail to remove data for key \(key)")

@@ -35,7 +35,7 @@
             parallelizable = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "82C2A5022C5A4FC8004ACF82"
+               BlueprintIdentifier = "82C2A5292C5A57E5004ACF82"
                BuildableName = "VVWebImageDemoTests.xctest"
                BlueprintName = "VVWebImageDemoTests"
                ReferencedContainer = "container:VVWebImageDemo.xcodeproj">

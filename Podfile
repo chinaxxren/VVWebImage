@@ -3,7 +3,10 @@ use_frameworks!
 platform :ios, '13.0'
 
 target 'VVWebImageDemo' do
-	pod 'VVWebImage', :path => './'
+	pod 'VVWebImage/Core', :path => './'
+  pod 'VVWebImage/MapKit', :path => './'
+  pod 'VVWebImage/Filter', :path => './'
+  pod 'VVWebImage/WebP', :path => './'
 end
 
 post_install do |installer_representation|

@@ -9,8 +9,6 @@ Pod::Spec.new do |s|
 
   s.homepage     = 'https://github.com/chinaxxren/VVWebImage'
 
-  s.license      = { :type => 'MIT', :file => 'LICENSE' }
-
   s.author       = { 'chinaxxren' => 'jiangmingz@qq.com' }
 
   s.platform     = :ios, '13.0'
@@ -24,19 +22,26 @@ Pod::Spec.new do |s|
   s.default_subspec = 'Core'
 
   s.subspec 'Core' do |core|
-    core.source_files = 'VVWebImage/VVWebImage/VVWebImage.h', 'VVWebImage/VVWebImage/**/*.swift'
-    core.exclude_files = 'VVWebImage/VVWebImage/Extensions/MKAnnotationView+VVWebCache.swift', 'VVWebImage/VVWebImage/Filter/*'
+    core.source_files = 'VVWebImage/VVWebImage.h', 'VVWebImage/Base/*.swift', 'VVWebImage/Extensions/*.swift'
   end
 
   s.subspec 'MapKit' do |mk|
-    mk.source_files = 'VVWebImage/VVWebImage/Extensions/MKAnnotationView+VVWebCache.swift'
+    mk.source_files = 'VVWebImage/MapKit/MKAnnotationView+VVWebCache.swift'
     mk.dependency 'VVWebImage/Core'
   end
 
   s.subspec 'Filter' do |filter|
-    filter.source_files = 'VVWebImage/VVWebImage/Filter'
-    filter.resources = 'VVWebImage/VVWebImage/**/*.cikernel'
+    filter.source_files = 'VVWebImage/Filter/*.swift'
+    filter.resources = 'VVWebImage/Filter/*.cikernel'
     filter.dependency 'VVWebImage/Core'
-  end 
-
+  end
+  
+  s.subspec 'WebP' do |webp|
+    webp.source_files = 'VVWebImage/WebP/*.{h,m,swift}'
+    webp.xcconfig = {
+      'USER_HEADER_SEARCH_PATHS' => '$(inherited) $(SRCROOT)/libwebp/src'
+    }
+    webp.dependency 'VVWebImage/Core'
+    webp.dependency 'libwebp'
+  end
 end

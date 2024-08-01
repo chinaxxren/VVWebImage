@@ -1,18 +1,43 @@
 PODS:
-  - VVWebImage (1.1.3):
-    - VVWebImage/Core (= 1.1.3)
-  - VVWebImage/Core (1.1.3)
+  - libwebp (1.3.2):
+    - libwebp/demux (= 1.3.2)
+    - libwebp/mux (= 1.3.2)
+    - libwebp/sharpyuv (= 1.3.2)
+    - libwebp/webp (= 1.3.2)
+  - libwebp/demux (1.3.2):
+    - libwebp/webp
+  - libwebp/mux (1.3.2):
+    - libwebp/demux
+  - libwebp/sharpyuv (1.3.2)
+  - libwebp/webp (1.3.2):
+    - libwebp/sharpyuv
+  - VVWebImage/Core (1.0.0)
+  - VVWebImage/Filter (1.0.0):
+    - VVWebImage/Core
+  - VVWebImage/MapKit (1.0.0):
+    - VVWebImage/Core
+  - VVWebImage/WebP (1.0.0):
+    - libwebp
+    - VVWebImage/Core
 
 DEPENDENCIES:
-  - VVWebImage (from `./`)
+  - VVWebImage/Core (from `./`)
+  - VVWebImage/Filter (from `./`)
+  - VVWebImage/MapKit (from `./`)
+  - VVWebImage/WebP (from `./`)
+
+SPEC REPOS:
+  trunk:
+    - libwebp
 
 EXTERNAL SOURCES:
   VVWebImage:
     :path: "./"
 
 SPEC CHECKSUMS:
-  VVWebImage: 4e171db2fc49c5ed1f943b591e0ce5a94a683041
+  libwebp: 1786c9f4ff8a279e4dac1e8f385004d5fc253009
+  VVWebImage: 2de207267f0f3413c602653e8c5d08f8f07cdcd7
 
-PODFILE CHECKSUM: 5e8109a1a9d9859a5e591bfb815ca550032ebef4
+PODFILE CHECKSUM: ebd1e234588a5854839b74154d43d4c962a85f38
 
 COCOAPODS: 1.15.2

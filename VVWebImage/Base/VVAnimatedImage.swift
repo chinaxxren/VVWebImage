@@ -2,9 +2,6 @@
 //  VVAnimatedImage.swift
 //  VVWebImage
 //
-//  Created by waqu on 2/6/19.
-//  Copyright © 2019 waqu. All rights reserved.
-//
 
 import UIKit
 
@@ -101,13 +98,13 @@ public class VVAnimatedImage: UIImage {
         NotificationCenter.default.removeObserver(self)
     }
     
-    /// Creates animated image with data and decoder.
-    /// If specify decoder to nil, this method tries to find a coder from VVWebImageManager shared instance.
-    /// If no decoder found or decoder can not decode data, this method returns nil.
+    /// 创建一个带有数据和解码器的动画图像。
+    /// 如果指定解码器为nil，该方法会尝试从VVWebImageManager共享实例中查找解码器。
+    /// 如果找不到解码器或解码器无法解码数据，该方法将返回nil。
     ///
     /// - Parameters:
-    ///   - data: image data
-    ///   - aDecoder: animated image data decoder
+    ///   - data: 图像数据
+    ///   - aDecoder: 动画图像数据解码器
     public convenience init?(vv_data data: Data, decoder aDecoder: VVAnimatedImageCoder? = nil) {
         var tempDecoder = aDecoder
         if tempDecoder == nil {

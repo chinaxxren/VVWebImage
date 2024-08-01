@@ -2,9 +2,6 @@
 //  TestGIFVC.swift
 //  VVWebImageDemo
 //
-//  Created by waqu on 2/6/19.
-//  Copyright © 2019 waqu. All rights reserved.
-//
 
 import UIKit
 import VVWebImage

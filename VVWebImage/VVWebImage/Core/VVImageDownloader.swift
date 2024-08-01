@@ -62,7 +62,7 @@ private class VVImageDefaultDownloadTask: VVImageDownloadTaskProtocol {
     init(sentinel: Int32, url: URL, progress: VVImageDownloaderProgress?, completion: @escaping VVImageDownloaderCompletion) {
         self.sentinel = sentinel
         self.url = url
-        self.isCancelled = false
+        isCancelled = false
         self.progress = progress
         self.completion = completion
     }
@@ -116,12 +116,12 @@ public class VVMergeRequestImageDownloader {
     
     private let operationQueue: VVImageDownloadOperationQueue
     private var taskSentinel: Int32
-    private var urlOperations: [URL : VVImageDownloadOperationProtocol]
-    private var preloadTasks: [Int32 : VVImageDownloadTaskProtocol]
-    private var httpHeaders: [String : String]
+    private var urlOperations: [URL: VVImageDownloadOperationProtocol]
+    private var preloadTasks: [Int32: VVImageDownloadTaskProtocol]
+    private var httpHeaders: [String: String]
     private let lock: DispatchSemaphore
     private let sessionConfiguration: URLSessionConfiguration
-    private lazy var sessionDelegate: VVImageDownloadSessionDelegate = { VVImageDownloadSessionDelegate(downloader: self) }()
+    private lazy var sessionDelegate: VVImageDownloadSessionDelegate = .init(downloader: self)
     private lazy var session: URLSession = {
         let queue = OperationQueue()
         queue.qualityOfService = .background
@@ -141,7 +141,7 @@ public class VVMergeRequestImageDownloader {
         operationQueue.maxRunningCount = 6
         urlOperations = [:]
         preloadTasks = [:]
-        httpHeaders = ["Accept" : "image/*;q=0.8"]
+        httpHeaders = ["Accept": "image/*;q=0.8"]
         lock = DispatchSemaphore(value: 1)
         self.sessionConfiguration = sessionConfiguration
     }
@@ -170,7 +170,8 @@ extension VVMergeRequestImageDownloader: VVImageDownloaderProtool {
     public func downloadImage(with url: URL,
                               options: VVWebImageOptions = .none,
                               progress: VVImageDownloaderProgress? = nil,
-                              completion: @escaping VVImageDownloaderCompletion) -> VVImageDownloadTaskProtocol {
+                              completion: @escaping VVImageDownloaderCompletion) -> VVImageDownloadTaskProtocol
+    {
         let task = generateDownloadTask(url, progress, completion)
         lock.wait()
         if options.contains(.preload) { preloadTasks[task.sentinel] = task }
@@ -193,7 +194,9 @@ extension VVMergeRequestImageDownloader: VVImageDownloaderProtool {
                 self.lock.wait()
                 self.urlOperations.removeValue(forKey: url)
                 if let tasks = newOperation?.downloadTasks {
-                    for task in tasks { self.preloadTasks.removeValue(forKey: task.sentinel) }
+                    for task in tasks {
+                        self.preloadTasks.removeValue(forKey: task.sentinel)
+                    }
                 }
                 self.operationQueue.removeOperation(forKey: url)
                 self.lock.signal()
@@ -240,9 +243,9 @@ extension VVMergeRequestImageDownloader: VVImageDownloaderProtool {
     }
     
     public func cancelAll() {
-        self.lock.wait()
+        lock.wait()
         let operations = urlOperations
-        self.lock.signal()
+        lock.signal()
         for (_, operation) in operations {
             operation.cancel()
         }
@@ -258,9 +261,10 @@ private class VVImageDownloadSessionDelegate: NSObject, URLSessionTaskDelegate {
     
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         if let url = task.originalRequest?.url,
-            let operation = downloader?.operation(for: url),
-            operation.dataTaskId == task.taskIdentifier,
-            let taskDelegate = operation as? URLSessionTaskDelegate {
+           let operation = downloader?.operation(for: url),
+           operation.dataTaskId == task.taskIdentifier,
+           let taskDelegate = operation as? URLSessionTaskDelegate
+        {
             taskDelegate.urlSession?(session, task: task, didCompleteWithError: error)
         }
     }
@@ -270,11 +274,13 @@ extension VVImageDownloadSessionDelegate: URLSessionDataDelegate {
     func urlSession(_ session: URLSession,
                     dataTask: URLSessionDataTask,
                     didReceive response: URLResponse,
-                    completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
+                    completionHandler: @escaping (URLSession.ResponseDisposition) -> Void)
+    {
         if let url = dataTask.originalRequest?.url,
-            let operation = downloader?.operation(for: url),
-            operation.dataTaskId == dataTask.taskIdentifier,
-            let dataDelegate = operation as? URLSessionDataDelegate {
+           let operation = downloader?.operation(for: url),
+           operation.dataTaskId == dataTask.taskIdentifier,
+           let dataDelegate = operation as? URLSessionDataDelegate
+        {
             dataDelegate.urlSession?(session, dataTask: dataTask, didReceive: response, completionHandler: completionHandler)
         } else {
             completionHandler(.allow)
@@ -283,9 +289,10 @@ extension VVImageDownloadSessionDelegate: URLSessionDataDelegate {
     
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
         if let url = dataTask.originalRequest?.url,
-            let operation = downloader?.operation(for: url),
-            operation.dataTaskId == dataTask.taskIdentifier,
-            let dataDelegate = operation as? URLSessionDataDelegate {
+           let operation = downloader?.operation(for: url),
+           operation.dataTaskId == dataTask.taskIdentifier,
+           let dataDelegate = operation as? URLSessionDataDelegate
+        {
             dataDelegate.urlSession?(session, dataTask: dataTask, didReceive: data)
         }
     }
